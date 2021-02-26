@@ -1,0 +1,18 @@
+mysql:
+  host: "127.0.0.1"
+  user: "root"
+  password: ""
+  database: "my_server"
+rank-permissions:
+  2:
+    - "command.ban"
+  1:
+    - "command.mute"
+    - "command.kick"
+  0:
+    - "chat.message"
+allowed-commands:
+  - "home"
+  - "sethome"
+  - "spawn"
+command-not-allowed-message: "Unknown command: /{COMMAND}"

@@ -1,4 +1,9 @@
+main: eu.hiddenite.perms.bukkit.PermsBukkitPlugin
 name: HiddenitePerms
-main: eu.hiddenite.perms.PermsPlugin
 version: 1.0.0
+api-version: 1.16
 author: Hiddenite
+permissions:
+  hiddenite.perms.bypass:
+    description: "Bypasses the blocked commands."
+    default: op

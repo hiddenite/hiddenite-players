@@ -1,5 +1,9 @@
-package eu.hiddenite.perms;
+package eu.hiddenite.perms.bungee;
 
+import eu.hiddenite.perms.Database;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
+import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.event.LoginEvent;
 import net.md_5.bungee.api.event.PostLoginEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -17,15 +21,15 @@ import java.nio.file.Files;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
-public class PermsPlugin extends Plugin implements Listener {
+public class PermsBungeePlugin extends Plugin implements Listener {
     private Configuration config;
     private Database database;
 
     private final HashMap<Integer, List<String>> rankPermissions = new HashMap<>();
+    private final HashSet<String> allowedCommands = new HashSet<>();
+    private String commandNotAllowedMessage;
 
     @Override
     public void onEnable() {
@@ -40,6 +44,8 @@ public class PermsPlugin extends Plugin implements Listener {
         }
 
         loadRankPermissions();
+        allowedCommands.addAll(config.getStringList("allowed-commands"));
+        commandNotAllowedMessage = config.getString("command-not-allowed-message");
 
         getProxy().getPluginManager().registerListener(this, this);
     }
@@ -100,6 +106,30 @@ public class PermsPlugin extends Plugin implements Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.LOW)
+    public void onPlayerChat(ChatEvent event) {
+        if (!(event.getSender() instanceof ProxiedPlayer)) {
+            return;
+        }
+        if (!event.getMessage().startsWith("/")) {
+            return;
+        }
+
+        ProxiedPlayer player = (ProxiedPlayer)event.getSender();
+        if (player.hasPermission("hiddenite.perms.bypass")) {
+            return;
+        }
+
+        String command = event.getMessage().split(" ")[0].substring(1);
+        String search = command.toLowerCase();
+
+        if (!allowedCommands.contains(search)) {
+            String errorMessage = commandNotAllowedMessage.replace("{COMMAND}", command);
+            player.sendMessage(TextComponent.fromLegacyText(errorMessage));
+            event.setCancelled(true);
+        }
+    }
+
     private boolean loadConfiguration() {
         if (!getDataFolder().exists()) {
             if (!getDataFolder().mkdir()) {
@@ -112,7 +142,7 @@ public class PermsPlugin extends Plugin implements Listener {
         if (!file.exists()) {
             getLogger().warning("No configuration file found, creating a default one.");
 
-            try (InputStream in = getResourceAsStream("config.yml")) {
+            try (InputStream in = getResourceAsStream("bungee-config.yml")) {
                 Files.copy(in, file.toPath());
             } catch (IOException e) {
                 e.printStackTrace();

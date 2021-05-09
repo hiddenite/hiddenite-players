@@ -3,16 +3,37 @@ mysql:
   user: "root"
   password: ""
   database: "my_server"
-rank-permissions:
-  2:
-    - "command.ban"
-  1:
-    - "command.mute"
-    - "command.kick"
-  0:
-    - "chat.message"
-allowed-commands:
-  - "home"
-  - "sethome"
-  - "spawn"
-command-not-allowed-message: "Unknown command: /{COMMAND}"
+
+players:
+  enabled: false
+  table: "players"
+
+ranks:
+  enabled: false
+  table: "players"
+  permissions:
+    2:
+      - "command.ban"
+    1:
+      - "command.mute"
+      - "command.kick"
+    0:
+      - "chat.message"
+
+online-players:
+  enabled: false
+  table: "online_players"
+  update-interval: 5
+
+contributors:
+  enabled: false
+  table: "contributors"
+  # TODO
+
+commands-filter:
+  enabled: false
+  allowed-commands:
+    - "home"
+    - "sethome"
+    - "spawn"
+  not-allowed-message: "Unknown command: /{COMMAND}"

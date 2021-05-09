@@ -1,4 +1,4 @@
-package eu.hiddenite.perms.bukkit;
+package eu.hiddenite.players.bukkit;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashSet;
 
-public class PermsBukkitPlugin extends JavaPlugin implements Listener {
+public class BukkitPlugin extends JavaPlugin implements Listener {
     private final HashSet<String> blockedCommands = new HashSet<>();
 
     @Override

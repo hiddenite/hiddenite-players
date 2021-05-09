@@ -1,5 +1,5 @@
-main: eu.hiddenite.perms.bukkit.PermsBukkitPlugin
-name: HiddenitePerms
+name: HiddenitePlayers
+main: eu.hiddenite.players.bukkit.BukkitPlugin
 version: 1.0.0
 api-version: 1.16
 author: Hiddenite

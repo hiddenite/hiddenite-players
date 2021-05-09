@@ -1,4 +1,4 @@
-package eu.hiddenite.perms;
+package eu.hiddenite.players;
 
 import net.md_5.bungee.config.Configuration;
 

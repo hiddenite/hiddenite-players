@@ -46,6 +46,8 @@ public class BungeePlugin extends Plugin {
         managers.add(new CommandsFilterManager(this));
         managers.add(new RanksManager(this));
         managers.add(new OnlinePlayersManager(this));
+        managers.add(new PlayerEventsManager(this));
+        managers.add(new OnlineTimeManager(this));
     }
 
     @Override

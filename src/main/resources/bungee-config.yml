@@ -25,6 +25,14 @@ online-players:
   table: "online_players"
   update-interval: 5
 
+events:
+  enabled: false
+  table: "player_events"
+
+online-time:
+  enabled: false
+  table: "online_time"
+
 contributors:
   enabled: false
   table: "contributors"

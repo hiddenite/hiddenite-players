@@ -1,3 +1,4 @@
 blocked-commands:
   - "pl"
   - "plugins"
+inactivity-time: 60

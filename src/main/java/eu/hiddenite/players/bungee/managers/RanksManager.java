@@ -18,6 +18,7 @@ public class RanksManager extends Manager implements Listener {
 
     private boolean isEnabled;
     private String tableName;
+    private String idFieldName;
     private HashMap<Integer, List<String>> rankPermissions;
 
     public RanksManager(BungeePlugin plugin) {
@@ -30,6 +31,7 @@ public class RanksManager extends Manager implements Listener {
     public void reload() {
         isEnabled = plugin.getConfig().getBoolean("ranks.enabled");
         tableName = plugin.getConfig().getString("ranks.table");
+        idFieldName = plugin.getConfig().getString("ranks.field-id", "id");
         loadRankPermissions();
     }
 
@@ -55,7 +57,7 @@ public class RanksManager extends Manager implements Listener {
 
         int playerRank = 0;
         try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
-                "SELECT rank FROM `" + tableName + "` WHERE id = ?"
+                "SELECT rank FROM `" + tableName + "` WHERE `" + idFieldName + "` = ?"
         )) {
             ps.setString(1, playerId.toString());
             try (ResultSet rs = ps.executeQuery()) {

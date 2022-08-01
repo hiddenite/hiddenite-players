@@ -2,6 +2,7 @@ package eu.hiddenite.players.bungee;
 
 import eu.hiddenite.players.Database;
 import eu.hiddenite.players.bungee.commands.ReloadCommand;
+import eu.hiddenite.players.bungee.commands.SameCommand;
 import eu.hiddenite.players.bungee.managers.*;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
@@ -41,6 +42,7 @@ public class BungeePlugin extends Plugin {
         }
 
         getProxy().getPluginManager().registerCommand(this, new ReloadCommand(this));
+        getProxy().getPluginManager().registerCommand(this, new SameCommand(this));
 
         managers.add(new PlayersManager(this));
         managers.add(new CommandsFilterManager(this));

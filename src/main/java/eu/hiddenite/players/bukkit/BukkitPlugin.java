@@ -9,8 +9,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
@@ -33,6 +31,8 @@ public class BukkitPlugin extends JavaPlugin implements Listener {
 
         getServer().getScheduler().scheduleSyncRepeatingTask(this, this::checkAfkPlayers, 30, 30);
         getServer().getMessenger().registerOutgoingPluginChannel( this, "hiddenite:afk");
+
+        new EventLoggerManager(this);
     }
 
     @Override

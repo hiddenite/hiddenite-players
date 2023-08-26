@@ -2,19 +2,18 @@ package eu.hiddenite.players.bungee.managers;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.PlayerDisconnectEvent;
-import net.md_5.bungee.api.event.ServerConnectedEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.api.scheduler.ScheduledTask;
-import net.md_5.bungee.event.EventHandler;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
-public class OnlinePlayersManager extends Manager implements Listener {
+public class OnlinePlayersManager extends Manager {
     private final BungeePlugin plugin;
 
     private boolean isEnabled;
@@ -27,12 +26,12 @@ public class OnlinePlayersManager extends Manager implements Listener {
     public OnlinePlayersManager(BungeePlugin plugin) {
         this.plugin = plugin;
         reload();
-        plugin.getProxy().getPluginManager().registerListener(plugin, this);
+        plugin.getServer().getEventManager().register(plugin, this);
     }
 
     @Override
     public void reload() {
-        isEnabled = plugin.getConfig().getBoolean("online-players.enabled");
+        isEnabled = plugin.getConfig().onlinePlayers.enabled;
         if (!isEnabled) {
             if (task != null) {
                 task.cancel();
@@ -41,10 +40,10 @@ public class OnlinePlayersManager extends Manager implements Listener {
             return;
         }
 
-        tableName = plugin.getConfig().getString("online-players.table");
+        tableName = plugin.getConfig().onlinePlayers.table;
 
         int oldUpdateInterval = updateInterval;
-        updateInterval = plugin.getConfig().getInt("online-players.update-interval");
+        updateInterval = plugin.getConfig().onlinePlayers.updateInterval;
 
         if (oldUpdateInterval != updateInterval || task == null) {
             startTask();
@@ -55,20 +54,20 @@ public class OnlinePlayersManager extends Manager implements Listener {
         if (task != null) {
             task.cancel();
         }
-        task = plugin.getProxy().getScheduler().schedule(plugin,
-                this::updateOnlinePlayers, 1,
-                updateInterval,
-                TimeUnit.SECONDS
-        );
+
+        task = plugin.getServer().getScheduler()
+                .buildTask(plugin, this::updateOnlinePlayers)
+                .repeat(updateInterval, TimeUnit.SECONDS)
+                .schedule();
     }
 
-    @EventHandler
+    @Subscribe
     public void onServerConnectedEvent(ServerConnectedEvent event) {
         shouldUpdateOnlinePlayers = true;
     }
 
-    @EventHandler
-    public void onPlayerDisconnectEvent(PlayerDisconnectEvent event) {
+    @Subscribe
+    public void onPlayerDisconnectEvent(DisconnectEvent event) {
         shouldUpdateOnlinePlayers = true;
     }
 
@@ -80,9 +79,9 @@ public class OnlinePlayersManager extends Manager implements Listener {
 
         JsonArray jsonPlayers = new JsonArray();
 
-        for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+        for (Player player : plugin.getServer().getAllPlayers()) {
             JsonObject jsonPlayer = new JsonObject();
-            jsonPlayer.addProperty("name", player.getName());
+            jsonPlayer.addProperty("name", player.getUsername());
             jsonPlayer.addProperty("uuid", player.getUniqueId().toString());
             jsonPlayers.add(jsonPlayer);
         }
@@ -90,7 +89,7 @@ public class OnlinePlayersManager extends Manager implements Listener {
         int playersCount = jsonPlayers.size();
         String playersData = jsonPlayers.toString();
 
-        plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+        plugin.getServer().getScheduler().buildTask(plugin, () -> {
             try {
                 try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
                         "INSERT INTO `" + tableName + "`" +
@@ -104,6 +103,6 @@ public class OnlinePlayersManager extends Manager implements Listener {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        });
+        }).schedule();
     }
 }

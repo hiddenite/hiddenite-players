@@ -1,12 +1,11 @@
-package eu.hiddenite.players;
+package eu.hiddenite.players.bungee;
 
-import net.md_5.bungee.config.Configuration;
+import org.slf4j.Logger;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.logging.Logger;
 
 public class Database {
     private final Logger logger;
@@ -26,6 +25,7 @@ public class Database {
         if (connection == null) {
             return;
         }
+        logger.info("Closed database connection");
         try {
             connection.close();
         } catch (SQLException e) {
@@ -41,10 +41,17 @@ public class Database {
     }
 
     private boolean createConnection() {
-        String sqlHost = config.getString("mysql.host");
-        String sqlUser = config.getString("mysql.user");
-        String sqlPassword = config.getString("mysql.password");
-        String sqlDatabase = config.getString("mysql.database");
+        String sqlHost = config.mysql.host;
+        String sqlUser = config.mysql.user;
+        String sqlPassword = config.mysql.password;
+        String sqlDatabase = config.mysql.database;
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException exception) {
+            exception.printStackTrace();
+            return false;
+        }
 
         try {
             DriverManager.setLoginTimeout(2);
@@ -52,7 +59,7 @@ public class Database {
             logger.info("Successfully connected to " + sqlUser + "@" + sqlHost + "/" + sqlDatabase);
             return true;
         } catch (SQLException e) {
-            logger.warning("Could not connect to " + sqlUser + "@" + sqlHost + "/" + sqlDatabase);
+            logger.warn("Could not connect to " + sqlUser + "@" + sqlHost + "/" + sqlDatabase);
             e.printStackTrace();
             return false;
         }

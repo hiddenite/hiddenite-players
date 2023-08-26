@@ -1,3 +1,4 @@
+/*
 package eu.hiddenite.players.bungee.managers;
 
 import eu.hiddenite.players.bungee.BungeePlugin;
@@ -80,3 +81,4 @@ public class RanksManager extends Manager implements Listener {
         }
     }
 }
+*/

@@ -1,14 +1,16 @@
 package eu.hiddenite.players.bungee.managers;
 
+import com.velocitypowered.api.event.PostOrder;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.plugin.Listener;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class OnlineTimeManager extends Manager implements Listener {
+public class OnlineTimeManager extends Manager {
     private static class OnlineState {
         public long activeTime = 0;
         public long inactiveTime = 0;
@@ -30,17 +32,27 @@ public class OnlineTimeManager extends Manager implements Listener {
         this.plugin = plugin;
         instance = this;
         reload();
+
+        plugin.getServer().getEventManager().register(plugin, this);
     }
 
     @Override
     public void reload() {
-        isEnabled = plugin.getConfig().getBoolean("online-time.enabled");
-        tableName = plugin.getConfig().getString("online-time.table");
+        isEnabled = plugin.getConfig().onlineTime.enabled;
+        tableName = plugin.getConfig().onlineTime.table;
 
         plugin.getLogger().info("Online time is " + (isEnabled ? "enabled, table " + tableName : "disabled"));
     }
 
-    public void handlePlayerEvent(UUID playerId, String eventType) {
+    @Subscribe(order = PostOrder.EARLY)
+    public void onProxyShutdown(ProxyShutdownEvent event) {
+        for (UUID playerId : playerStates.keySet()) {
+            handlePlayerEvent(playerId, "logout", false);
+        }
+        isEnabled = false;
+    }
+
+    public void handlePlayerEvent(UUID playerId, String eventType, boolean isAsync) {
         long now = System.currentTimeMillis();
 
         if (eventType.equals("login")) {
@@ -70,35 +82,43 @@ public class OnlineTimeManager extends Manager implements Listener {
             } else {
                 onlineState.inactiveTime += delta;
             }
-            updateOnlineTime(playerId, onlineState.activeTime, onlineState.inactiveTime);
+            updateOnlineTime(playerId, onlineState.activeTime, onlineState.inactiveTime, isAsync);
             playerStates.remove(playerId);
         }
     }
 
-    private void updateOnlineTime(UUID playerId, long activeTime, long inactiveTime) {
+    private void updateOnlineTime(UUID playerId, long activeTime, long inactiveTime, boolean isAsync) {
         if (!isEnabled) return;
 
         plugin.getLogger().info("Adding online-time to " + playerId + ": "
                 + activeTime + " active " + inactiveTime + " inactive");
 
-        plugin.getProxy().getScheduler().runAsync(plugin, () -> {
-            try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
-                    "INSERT INTO `" + tableName + "`" +
-                            " (player_uuid, active_time, inactive_time)" +
-                            " VALUES (?, ?, ?)" +
-                            " ON DUPLICATE KEY UPDATE active_time = active_time + ?," +
-                            " inactive_time = inactive_time + ?"
-            )) {
-                ps.setString(1, playerId.toString());
-                ps.setLong(2, activeTime);
-                ps.setLong(3, inactiveTime);
-                ps.setLong(4, activeTime);
-                ps.setLong(5, inactiveTime);
-                ps.executeUpdate();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        });
+        if (isAsync) {
+            plugin.getServer().getScheduler().buildTask(plugin, () -> {
+                executeDatabaseUpdate(playerId.toString(), activeTime, inactiveTime);
+            }).schedule();
+        } else {
+            executeDatabaseUpdate(playerId.toString(), activeTime, inactiveTime);
+        }
+    }
+
+    private void executeDatabaseUpdate(String playerId, long activeTime, long inactiveTime) {
+        try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
+                "INSERT INTO `" + tableName + "`" +
+                        " (player_uuid, active_time, inactive_time)" +
+                        " VALUES (?, ?, ?)" +
+                        " ON DUPLICATE KEY UPDATE active_time = active_time + ?," +
+                        " inactive_time = inactive_time + ?"
+        )) {
+            ps.setString(1, playerId.toString());
+            ps.setLong(2, activeTime);
+            ps.setLong(3, inactiveTime);
+            ps.setLong(4, activeTime);
+            ps.setLong(5, inactiveTime);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private static OnlineTimeManager instance;

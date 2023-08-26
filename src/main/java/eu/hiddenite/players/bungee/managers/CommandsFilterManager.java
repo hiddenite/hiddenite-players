@@ -1,16 +1,14 @@
 package eu.hiddenite.players.bungee.managers;
 
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.ChatEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
-import net.md_5.bungee.event.EventPriority;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.HashSet;
 
-public class CommandsFilterManager extends Manager implements Listener {
+public class CommandsFilterManager extends Manager {
     private final BungeePlugin plugin;
 
     private boolean isEnabled;
@@ -20,41 +18,36 @@ public class CommandsFilterManager extends Manager implements Listener {
     public CommandsFilterManager(BungeePlugin plugin) {
         this.plugin = plugin;
         reload();
-        plugin.getProxy().getPluginManager().registerListener(plugin, this);
+        plugin.getServer().getEventManager().register(plugin, this);
     }
 
     @Override
     public void reload() {
-        isEnabled = plugin.getConfig().getBoolean("commands-filter.enabled");
+        isEnabled = plugin.getConfig().commandsFilter.enabled;
         allowedCommands = new HashSet<>();
-        allowedCommands.addAll(plugin.getConfig().getStringList("commands-filter.allowed-commands"));
-        commandNotAllowedMessage = plugin.getConfig().getString("commands-filter.not-allowed-message");
+        allowedCommands.addAll(plugin.getConfig().commandsFilter.allowedCommands);
+        commandNotAllowedMessage = plugin.getConfig().commandsFilter.notAllowedMessage;
     }
 
-    @EventHandler(priority = EventPriority.LOW)
-    public void onPlayerChat(ChatEvent event) {
-        if (event.isCancelled() || !isEnabled) {
+    @Subscribe
+    public void onCommandExecute(CommandExecuteEvent event) {
+        if (!event.getResult().isAllowed() || !isEnabled) {
             return;
         }
-        if (!(event.getSender() instanceof ProxiedPlayer)) {
+        if (!(event.getCommandSource() instanceof Player player)) {
             return;
         }
-        if (!event.getMessage().startsWith("/")) {
-            return;
-        }
-
-        ProxiedPlayer player = (ProxiedPlayer)event.getSender();
         if (player.hasPermission("hiddenite.perms.bypass")) {
             return;
         }
 
-        String command = event.getMessage().split(" ")[0].substring(1);
+        String command = event.getCommand().split(" ")[0];
         String search = command.toLowerCase();
 
         if (!allowedCommands.contains(search)) {
             String errorMessage = commandNotAllowedMessage.replace("{COMMAND}", command);
-            player.sendMessage(TextComponent.fromLegacyText(errorMessage));
-            event.setCancelled(true);
+            player.sendMessage(MiniMessage.miniMessage().deserialize(errorMessage));
+            event.setResult(CommandExecuteEvent.CommandResult.denied());
         }
     }
 }

@@ -1,17 +1,19 @@
 package eu.hiddenite.players.bungee.managers;
 
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.DisconnectEvent;
+import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.connection.PostLoginEvent;
+import com.velocitypowered.api.event.player.ServerConnectedEvent;
+import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.event.*;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
 
-import java.net.InetSocketAddress;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class PlayerEventsManager extends Manager implements Listener {
+public class PlayerEventsManager extends Manager {
     private final BungeePlugin plugin;
 
     private boolean isEnabled;
@@ -19,81 +21,77 @@ public class PlayerEventsManager extends Manager implements Listener {
 
     public PlayerEventsManager(BungeePlugin plugin) {
         this.plugin = plugin;
-        plugin.getProxy().getPluginManager().registerListener(plugin, this);
-
         reload();
 
-        plugin.getProxy().registerChannel("hiddenite:afk");
+        plugin.getServer().getEventManager().register(plugin, this);
+        plugin.getServer().getChannelRegistrar().register(MinecraftChannelIdentifier.from("hiddenite:afk"));
     }
 
     @Override
     public void reload() {
-        isEnabled = plugin.getConfig().getBoolean("events.enabled");
-        tableName = plugin.getConfig().getString("events.table");
+        isEnabled = plugin.getConfig().events.enabled;
+        tableName = plugin.getConfig().events.table;
 
         plugin.getLogger().info("Player events are " + (isEnabled ? "enabled, table " + tableName : "disabled"));
     }
 
-    @EventHandler
+    @Subscribe
     public void onPostLogin(PostLoginEvent event) {
         if (!isEnabled) return;
 
         UUID playerId = event.getPlayer().getUniqueId();
-        String username = event.getPlayer().getName();
-
-        String ip = null;
-        if (event.getPlayer().getSocketAddress() instanceof InetSocketAddress address) {
-            ip = address.getAddress().getHostAddress();
-        }
+        String username = event.getPlayer().getUsername();
+        String ip = event.getPlayer().getRemoteAddress().getAddress().getHostAddress();
 
         saveEvent("login", playerId, username, ip, null);
     }
 
-    @EventHandler
-    public void onPlayerDisconnect(PlayerDisconnectEvent event) {
+    @Subscribe
+    public void onPlayerDisconnect(DisconnectEvent event) {
         if (!isEnabled) return;
 
         UUID playerId = event.getPlayer().getUniqueId();
-        String username = event.getPlayer().getName();
+        String username = event.getPlayer().getUsername();
+
         saveEvent("logout", playerId, username, null, null);
     }
 
-    @EventHandler
+    @Subscribe
     public void onServerConnected(ServerConnectedEvent event) {
         if (!isEnabled) return;
 
-        ProxiedPlayer player = event.getPlayer();
-        player.setPermission("hiddenite.afk", false);
+        Player player = event.getPlayer();
+        // player.setPermission("hiddenite.afk", false);
 
         UUID playerId = player.getUniqueId();
-        String username = player.getName();
-        String serverName = event.getServer().getInfo().getName();
+        String username = player.getUsername();
+        String serverName = event.getServer().getServerInfo().getName();
+
         saveEvent("server", playerId, username, null, serverName);
     }
 
-    @EventHandler
+    @Subscribe
     public void onPluginMessage(PluginMessageEvent event) {
-        if (!event.getTag().equals("hiddenite:afk")) {
+        if (!event.getIdentifier().getId().equals("hiddenite:afk")) {
             return;
         }
-        event.setCancelled(true);
+        event.setResult(PluginMessageEvent.ForwardResult.handled());
 
         if (!isEnabled) return;
-        if (!(event.getReceiver() instanceof ProxiedPlayer player)) {
+        if (!(event.getTarget() instanceof Player player)) {
             return;
         }
 
         boolean isAfk = event.getData()[0] != 0;
-        player.setPermission("hiddenite.afk", isAfk);
 
         String eventType = isAfk ? "+afk" : "-afk";
-        saveEvent(eventType, player.getUniqueId(), player.getName(), null, null);
+        saveEvent(eventType, player.getUniqueId(), player.getUsername(), null, null);
     }
 
     private void saveEvent(String eventType, UUID playerId, String username, String playerIp, String serverName) {
-        OnlineTimeManager.getInstance().handlePlayerEvent(playerId, eventType);
+        OnlineTimeManager.getInstance().handlePlayerEvent(playerId, eventType, true);
 
-        plugin.getProxy().getScheduler().runAsync(plugin, () -> {
+        plugin.getServer().getScheduler().buildTask(plugin, () -> {
             try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
                     "INSERT INTO `" + tableName + "`" +
                             " (event_type, player_uuid, username, player_ip, server_name)" +
@@ -108,6 +106,6 @@ public class PlayerEventsManager extends Manager implements Listener {
             } catch (SQLException e) {
                 e.printStackTrace();
             }
-        });
+        }).schedule();
     }
 }

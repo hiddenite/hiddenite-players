@@ -1,74 +1,78 @@
 package eu.hiddenite.players.bungee.commands;
 
+import com.google.common.collect.ImmutableList;
+import com.velocitypowered.api.command.CommandSource;
+import com.velocitypowered.api.command.SimpleCommand;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
-import net.md_5.bungee.api.plugin.Command;
-import net.md_5.bungee.api.plugin.TabExecutor;
+import net.kyori.adventure.text.Component;
 
-import java.net.InetSocketAddress;
 import java.util.*;
 
-public class SameCommand extends Command implements TabExecutor {
+public class SameCommand implements SimpleCommand {
     private final BungeePlugin plugin;
 
     public SameCommand(BungeePlugin plugin) {
-        super("same", "hiddenite.players.same");
         this.plugin = plugin;
     }
 
     @Override
-    public void execute(CommandSender sender, String[] args) {
+    public boolean hasPermission(final Invocation invocation) {
+        return invocation.source().hasPermission("hiddenite.players.same");
+    }
+
+    @Override
+    public void execute(final Invocation invocation) {
+        CommandSource source = invocation.source();
+        String[] args = invocation.arguments();
+
         if (args.length < 1) {
-            sender.sendMessage(new TextComponent("You must to specify a player."));
+            source.sendMessage(Component.text("You must to specify a player."));
             return;
         }
 
-        ProxiedPlayer target = plugin.getProxy().getPlayer(args[0]);
+        Player target = plugin.getServer().getPlayer(args[0]).orElse(null);
         if (target == null) {
-            sender.sendMessage(new TextComponent("The player doesn't exist or isn't connected."));
+            source.sendMessage(Component.text("The player doesn't exist or isn't connected."));
             return;
         }
 
         String targetAddress = getHostAddress(target);
         List<String> playersWithSameIP = new ArrayList<>();
 
-        for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
+        for (Player player : plugin.getServer().getAllPlayers()) {
             if (player != target && Objects.equals(getHostAddress(player), targetAddress)) {
-                playersWithSameIP.add(player.getName());
+                playersWithSameIP.add(player.getUsername());
             }
         }
 
         if (playersWithSameIP.size() < 1) {
-            sender.sendMessage(new TextComponent("There is no connected user with the same IP as " + target.getName() + "."));
+            source.sendMessage(Component.text("There is no connected user with the same IP as " + target.getUsername() + "."));
             return;
         }
 
-        sender.sendMessage(new TextComponent("Connected users with the same IP as " + target.getName() + " :" + String.join(", ", playersWithSameIP)));
+        source.sendMessage(Component.text("Connected users with the same IP as " + target.getUsername() + " :" + String.join(", ", playersWithSameIP)));
     }
 
     @Override
-    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+    public List<String> suggest(final Invocation invocation) {
+        String[] args = invocation.arguments();
         if (args.length == 1) {
             return matchPlayer(args[0]);
         }
-        return new HashSet<>();
+        return ImmutableList.of();
     }
 
-    private String getHostAddress(ProxiedPlayer player) {
-        if (player.getSocketAddress() instanceof InetSocketAddress address) {
-            return address.getAddress().getHostAddress();
-        }
-        return null;
+    private String getHostAddress(Player player) {
+        return player.getRemoteAddress().getAddress().getHostAddress();
     }
 
-    private Set<String> matchPlayer(String argument) {
-        Set<String> matches = new HashSet<>();
+    private List<String> matchPlayer(String argument) {
+        List<String> matches = new ArrayList<>();
         String search = argument.toUpperCase();
-        for (ProxiedPlayer player : plugin.getProxy().getPlayers()) {
-            if (player.getName().toUpperCase().startsWith(search)) {
-                matches.add(player.getName());
+        for (Player player : plugin.getServer().getAllPlayers()) {
+            if (player.getUsername().toUpperCase().startsWith(search)) {
+                matches.add(player.getUsername());
             }
         }
         return matches;

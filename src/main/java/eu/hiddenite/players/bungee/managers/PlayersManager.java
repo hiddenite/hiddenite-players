@@ -1,16 +1,15 @@
 package eu.hiddenite.players.bungee.managers;
 
+import com.velocitypowered.api.event.PostOrder;
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.LoginEvent;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.event.LoginEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.event.EventHandler;
-import net.md_5.bungee.event.EventPriority;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
-public class PlayersManager extends Manager implements Listener {
+public class PlayersManager extends Manager {
     private final BungeePlugin plugin;
 
     private boolean isEnabled;
@@ -19,23 +18,23 @@ public class PlayersManager extends Manager implements Listener {
     public PlayersManager(BungeePlugin plugin) {
         this.plugin = plugin;
         reload();
-        plugin.getProxy().getPluginManager().registerListener(plugin, this);
+        plugin.getServer().getEventManager().register(plugin, this);
     }
 
     @Override
     public void reload() {
-        isEnabled = plugin.getConfig().getBoolean("players.enabled");
-        tableName = plugin.getConfig().getString("players.table");
+        isEnabled = plugin.getConfig().players.enabled;
+        tableName = plugin.getConfig().players.table;
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+    @Subscribe(order = PostOrder.EARLY)
     public void onPlayerLogin(LoginEvent event) {
-        if (event.isCancelled() || !isEnabled) {
+        if (!event.getResult().isAllowed() || !isEnabled) {
             return;
         }
 
-        UUID playerId = event.getConnection().getUniqueId();
-        String playerName = event.getConnection().getName();
+        UUID playerId = event.getPlayer().getUniqueId();
+        String playerName = event.getPlayer().getUsername();
 
         try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
                 "INSERT INTO `" + tableName + "`" +

@@ -11,14 +11,9 @@ players:
 ranks:
   enabled: false
   table: "players"
-  permissions:
-    2:
-      - "command.ban"
-    1:
-      - "command.mute"
-      - "command.kick"
-    0:
-      - "chat.message"
+  groups:
+    2: "admin"
+    1: "moderator"
 
 online-players:
   enabled: false

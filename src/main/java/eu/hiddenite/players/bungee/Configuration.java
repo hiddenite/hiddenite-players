@@ -2,6 +2,7 @@ package eu.hiddenite.players.bungee;
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.HashMap;
 import java.util.List;
 
 @ConfigSerializable
@@ -12,6 +13,7 @@ public class Configuration {
     public OnlineTime onlineTime;
     public CommandsFilter commandsFilter;
     public OnlinePlayers onlinePlayers;
+    public Ranks ranks;
 
     @ConfigSerializable
     public static class MySQL {
@@ -51,5 +53,13 @@ public class Configuration {
         public boolean enabled;
         public String table;
         public int updateInterval;
+    }
+
+    @ConfigSerializable
+    public static class Ranks {
+        public boolean enabled;
+        public String table;
+        public String fieldId = "id";
+        public HashMap<Integer, String> groups;
     }
 }

@@ -1,60 +1,45 @@
-/*
 package eu.hiddenite.players.bungee.managers;
 
+import com.velocitypowered.api.event.Subscribe;
+import com.velocitypowered.api.event.connection.LoginEvent;
+import com.velocitypowered.api.proxy.Player;
 import eu.hiddenite.players.bungee.BungeePlugin;
-import net.md_5.bungee.api.event.PostLoginEvent;
-import net.md_5.bungee.api.plugin.Listener;
-import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.event.EventHandler;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.node.Node;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
-public class RanksManager extends Manager implements Listener {
+public class RanksManager extends Manager {
     private final BungeePlugin plugin;
-
-    private boolean isEnabled;
-    private String tableName;
-    private String idFieldName;
-    private HashMap<Integer, List<String>> rankPermissions;
+    private final LuckPerms luckPerms;
 
     public RanksManager(BungeePlugin plugin) {
         this.plugin = plugin;
+        this.luckPerms = LuckPermsProvider.get();
         reload();
-        plugin.getProxy().getPluginManager().registerListener(plugin, this);
+        plugin.getServer().getEventManager().register(plugin, this);
     }
 
     @Override
     public void reload() {
-        isEnabled = plugin.getConfig().getBoolean("ranks.enabled");
-        tableName = plugin.getConfig().getString("ranks.table");
-        idFieldName = plugin.getConfig().getString("ranks.field-id", "id");
-        loadRankPermissions();
     }
 
-    private void loadRankPermissions() {
-        rankPermissions = new HashMap<>();
-
-        Configuration rankSection = plugin.getConfig().getSection("ranks.permissions");
-        for (String key : rankSection.getKeys()) {
-            rankPermissions.put(Integer.parseInt(key), rankSection.getStringList(key));
-        }
-
-        plugin.getLogger().info("Loaded " + rankPermissions.size() + " ranks from the configuration");
-    }
-
-    @EventHandler
-    public void onPlayerLogin(PostLoginEvent event) {
-        if (!isEnabled) {
+    @Subscribe
+    public void onPlayerLogin(LoginEvent event) {
+        if (!plugin.getConfig().ranks.enabled) {
             return;
         }
 
-        UUID playerId = event.getPlayer().getUniqueId();
-        String playerName = event.getPlayer().getName();
+        Player player = event.getPlayer();
+        UUID playerId = player.getUniqueId();
+        String playerName = player.getUsername();
+
+        String tableName = plugin.getConfig().ranks.table;
+        String idFieldName = plugin.getConfig().ranks.fieldId;
 
         int playerRank = 0;
         try (PreparedStatement ps = plugin.getDatabase().prepareStatement(
@@ -70,15 +55,21 @@ public class RanksManager extends Manager implements Listener {
             e.printStackTrace();
         }
 
-        if (rankPermissions.containsKey(playerRank)) {
-            List<String> permissions = rankPermissions.get(playerRank);
-            for (String permission : permissions) {
-                event.getPlayer().setPermission(permission, true);
+        for (var entry : plugin.getConfig().ranks.groups.entrySet()) {
+            int rank = entry.getKey();
+            String group = entry.getValue();
+            if (playerRank == rank && !player.hasPermission("group." + group)) {
+                plugin.getLogger().info("Adding group " + group + " to player " + playerName);
+                luckPerms.getUserManager().modifyUser(playerId, user -> {
+                    user.data().add(Node.builder("group." + group).build());
+                });
             }
-            plugin.getLogger().info("Player " + playerName + " has rank " + playerRank + ", added " + permissions.size() + " permissions.");
-        } else if (playerRank > 0) {
-            plugin.getLogger().warning("Player " + playerName + " has rank " + playerRank + ", but this rank has no permission.");
+            if (playerRank != rank && player.hasPermission("group." + group)) {
+                plugin.getLogger().info("Removing group " + group + " from player " + playerName);
+                luckPerms.getUserManager().modifyUser(playerId, user -> {
+                    user.data().remove(Node.builder("group." + group).build());
+                });
+            }
         }
     }
 }
-*/

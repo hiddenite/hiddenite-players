@@ -44,8 +44,8 @@ public class OnlineTimeManager extends Manager {
         plugin.getLogger().info("Online time is " + (isEnabled ? "enabled, table " + tableName : "disabled"));
     }
 
-    @Subscribe(order = PostOrder.EARLY)
-    public void onProxyShutdown(ProxyShutdownEvent event) {
+    @Override
+    public void close() {
         for (UUID playerId : playerStates.keySet()) {
             handlePlayerEvent(playerId, "logout", false);
         }

@@ -5,6 +5,7 @@ import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -21,7 +22,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 
-@Plugin(id = "hiddenite-players", name = "HiddenitePlayers", version = "2.0.0", authors = {"Hiddenite"})
+@Plugin(id = "hiddenite-players",
+        name = "HiddenitePlayers",
+        version = "2.0.0",
+        authors = { "Hiddenite" },
+        dependencies = { @Dependency(id = "luckperms") }
+)
 public class BungeePlugin {
     private final ProxyServer server;
     public ProxyServer getServer() {
@@ -121,14 +127,17 @@ public class BungeePlugin {
 
         managers.add(new PlayersManager(this));
         managers.add(new CommandsFilterManager(this));
-        // managers.add(new RanksManager(this));
+        managers.add(new RanksManager(this));
         managers.add(new OnlinePlayersManager(this));
         managers.add(new PlayerEventsManager(this));
         managers.add(new OnlineTimeManager(this));
     }
 
-    @Subscribe(order = PostOrder.LATE)
+    @Subscribe(order = PostOrder.EARLY)
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        for (Manager manager : managers) {
+            manager.close();
+        }
         database.close();
     }
 }

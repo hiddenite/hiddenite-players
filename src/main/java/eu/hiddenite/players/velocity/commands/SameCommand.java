@@ -1,18 +1,18 @@
-package eu.hiddenite.players.bungee.commands;
+package eu.hiddenite.players.velocity.commands;
 
 import com.google.common.collect.ImmutableList;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 import net.kyori.adventure.text.Component;
 
 import java.util.*;
 
 public class SameCommand implements SimpleCommand {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
 
-    public SameCommand(BungeePlugin plugin) {
+    public SameCommand(VelocityPlugin plugin) {
         this.plugin = plugin;
     }
 

@@ -1,4 +1,4 @@
-package eu.hiddenite.players.bungee;
+package eu.hiddenite.players.velocity;
 
 import org.slf4j.Logger;
 

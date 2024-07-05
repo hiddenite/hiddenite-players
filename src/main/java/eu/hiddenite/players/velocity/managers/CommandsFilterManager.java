@@ -1,21 +1,21 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.proxy.Player;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.HashSet;
 
 public class CommandsFilterManager extends Manager {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
 
     private boolean isEnabled;
     private HashSet<String> allowedCommands;
     private String commandNotAllowedMessage;
 
-    public CommandsFilterManager(BungeePlugin plugin) {
+    public CommandsFilterManager(VelocityPlugin plugin) {
         this.plugin = plugin;
         reload();
         plugin.getServer().getEventManager().register(plugin, this);

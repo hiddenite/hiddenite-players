@@ -1,4 +1,4 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
@@ -7,19 +7,19 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
 public class PlayerEventsManager extends Manager {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
 
     private boolean isEnabled;
     private String tableName;
 
-    public PlayerEventsManager(BungeePlugin plugin) {
+    public PlayerEventsManager(VelocityPlugin plugin) {
         this.plugin = plugin;
         reload();
 

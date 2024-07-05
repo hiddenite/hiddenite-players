@@ -1,9 +1,6 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
-import com.velocitypowered.api.event.PostOrder;
-import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -22,13 +19,13 @@ public class OnlineTimeManager extends Manager {
         }
     }
 
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
     private final HashMap<UUID, OnlineState> playerStates = new HashMap<>();
 
     private boolean isEnabled;
     private String tableName;
 
-    public OnlineTimeManager(BungeePlugin plugin) {
+    public OnlineTimeManager(VelocityPlugin plugin) {
         this.plugin = plugin;
         instance = this;
         reload();

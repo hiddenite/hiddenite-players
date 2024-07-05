@@ -1,4 +1,4 @@
-package eu.hiddenite.players.bungee;
+package eu.hiddenite.players.velocity;
 
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.PostOrder;
@@ -9,9 +9,9 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import eu.hiddenite.players.bungee.commands.ReloadCommand;
-import eu.hiddenite.players.bungee.commands.SameCommand;
-import eu.hiddenite.players.bungee.managers.*;
+import eu.hiddenite.players.velocity.commands.ReloadCommand;
+import eu.hiddenite.players.velocity.commands.SameCommand;
+import eu.hiddenite.players.velocity.managers.*;
 import org.slf4j.Logger;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
@@ -28,7 +28,7 @@ import java.util.ArrayList;
         authors = { "Hiddenite" },
         dependencies = { @Dependency(id = "luckperms") }
 )
-public class BungeePlugin {
+public class VelocityPlugin {
     private final ProxyServer server;
     public ProxyServer getServer() {
         return server;
@@ -53,7 +53,7 @@ public class BungeePlugin {
     private final ArrayList<Manager> managers = new ArrayList<>();
 
     @Inject
-    public BungeePlugin(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
+    public VelocityPlugin(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
         this.server = server;
         this.logger = logger;
         this.dataDirectory = dataDirectory;

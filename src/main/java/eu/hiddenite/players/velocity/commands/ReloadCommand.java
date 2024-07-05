@@ -1,14 +1,14 @@
-package eu.hiddenite.players.bungee.commands;
+package eu.hiddenite.players.velocity.commands;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 import net.kyori.adventure.text.Component;
 
 public class ReloadCommand implements SimpleCommand {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
 
-    public ReloadCommand(BungeePlugin plugin) {
+    public ReloadCommand(VelocityPlugin plugin) {
         this.plugin = plugin;
     }
 

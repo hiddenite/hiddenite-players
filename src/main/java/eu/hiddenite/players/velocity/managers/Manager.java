@@ -1,4 +1,4 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
 public abstract class Manager {
     public abstract void reload();

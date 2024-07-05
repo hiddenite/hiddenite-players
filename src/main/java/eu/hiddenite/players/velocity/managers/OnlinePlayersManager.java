@@ -1,4 +1,4 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -7,14 +7,14 @@ import com.velocitypowered.api.event.connection.DisconnectEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.scheduler.ScheduledTask;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
 public class OnlinePlayersManager extends Manager {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
 
     private boolean isEnabled;
     private String tableName;
@@ -23,7 +23,7 @@ public class OnlinePlayersManager extends Manager {
 
     private boolean shouldUpdateOnlinePlayers = true;
 
-    public OnlinePlayersManager(BungeePlugin plugin) {
+    public OnlinePlayersManager(VelocityPlugin plugin) {
         this.plugin = plugin;
         reload();
         plugin.getServer().getEventManager().register(plugin, this);

@@ -1,9 +1,9 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
 import com.velocitypowered.api.proxy.Player;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.node.Node;
@@ -14,10 +14,10 @@ import java.sql.SQLException;
 import java.util.UUID;
 
 public class RanksManager extends Manager {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
     private final LuckPerms luckPerms;
 
-    public RanksManager(BungeePlugin plugin) {
+    public RanksManager(VelocityPlugin plugin) {
         this.plugin = plugin;
         this.luckPerms = LuckPermsProvider.get();
         reload();

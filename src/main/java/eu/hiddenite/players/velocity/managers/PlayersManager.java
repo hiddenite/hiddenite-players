@@ -1,21 +1,21 @@
-package eu.hiddenite.players.bungee.managers;
+package eu.hiddenite.players.velocity.managers;
 
 import com.velocitypowered.api.event.PostOrder;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.LoginEvent;
-import eu.hiddenite.players.bungee.BungeePlugin;
+import eu.hiddenite.players.velocity.VelocityPlugin;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.UUID;
 
 public class PlayersManager extends Manager {
-    private final BungeePlugin plugin;
+    private final VelocityPlugin plugin;
 
     private boolean isEnabled;
     private String tableName;
 
-    public PlayersManager(BungeePlugin plugin) {
+    public PlayersManager(VelocityPlugin plugin) {
         this.plugin = plugin;
         reload();
         plugin.getServer().getEventManager().register(plugin, this);

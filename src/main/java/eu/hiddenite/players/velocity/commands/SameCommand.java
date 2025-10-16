@@ -46,12 +46,12 @@ public class SameCommand implements SimpleCommand {
             }
         }
 
-        if (playersWithSameIP.size() < 1) {
+        if (playersWithSameIP.isEmpty()) {
             source.sendMessage(Component.text("There is no connected user with the same IP as " + target.getUsername() + "."));
             return;
         }
 
-        source.sendMessage(Component.text("Connected users with the same IP as " + target.getUsername() + " :" + String.join(", ", playersWithSameIP)));
+        source.sendMessage(Component.text("Connected users with the same IP as " + target.getUsername() + ": " + String.join(", ", playersWithSameIP)));
     }
 
     @Override

@@ -2,3 +2,4 @@ blocked-commands:
   - "pl"
   - "plugins"
 inactivity-time: 60
+player-sleeping-percentage: 100
